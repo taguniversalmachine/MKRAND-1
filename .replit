@@ -1,2 +1,2 @@
 language = "bash"
-run = "./configure && make -f src/Makefile.simple && ./mkrand -h"
+run = "git update-index --chmod=+x configure && ./configure && make -f src/Makefile.simple && ./mkrand -h"
