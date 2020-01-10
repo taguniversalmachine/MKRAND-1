@@ -284,7 +284,7 @@ void usage(cell_proc_t* cp){
   if (msg == NULL) { halt("Out of Memory");}
   memset(msg, '\0', 10000);
   
-  strcat(msg, "MKRAND - A Randomness Well  [von Neumann]\n");
+  strcat(msg, "MKRAND - A Digital Random Bit Generator\n");
   strcat(msg, "Copyright (c) 2013 TAG Universal Machine.\n\n");
   strcat(msg, "USAGE: mkrand [-f format] [-n blocks] [-o filename] [--profile] [--verbose]\n");
   strcat(msg, "Formats:\n");

@@ -31,117 +31,6 @@
  *                                        
  *                                                        Cellular Automata Rule 30                                    Universal Constant
  *                                                                 Field of Action                                                           R30
- *  Gen                                                                                                                                 (Center Column)
- * [001]   00000000000000000000000000000000001000000000000000000000000000000000 1
- * [002]   00000000000000000000000000000000011100000000000000000000000000000000 1
- * [003]   00000000000000000000000000000000110010000000000000000000000000000000 0
- * [004]   00000000000000000000000000000001101111000000000000000000000000000000 1
- * [005]   00000000000000000000000000000011001000100000000000000000000000000000 1
- * [006]   00000000000000000000000000000110111101110000000000000000000000000000 1
- * [007]   00000000000000000000000000001100100001001000000000000000000000000000 0
- * [008]   00000000000000000000000000011011110011111100000000000000000000000000 0
- * [009]   00000000000000000000000000110010001110000010000000000000000000000000 1
- * [010]   00000000000000000000000001101111011001000111000000000000000000000000 1
- * [011]   00000000000000000000000011001000010111101100100000000000000000000000 0
- * [012]   00000000000000000000000110111100110100001011110000000000000000000000 0
- * [013]   00000000000000000000001100100011100110011010001000000000000000000000 0
- * [014]   00000000000000000000011011110110011101110011011100000000000000000000 1
- * [015]   00000000000000000000110010000101110001001110010010000000000000000000 0
- * [016]   00000000000000000001101111001101001011111001111111000000000000000000 1
- * [017]   00000000000000000011001000111001111010000111000000100000000000000000 1
- * [018]   00000000000000000110111101100111000011001100100001110000000000000000 0
- * [019]   00000000000000001100100001011100100110111011110011001000000000000000 0
- * [020]   00000000000000011011110011010011111100100010001110111100000000000000 1
- * 
- *                                                                     Randomness
- *                                                                           / | \
- *                                                                          /  |  \
- *                                                                         /   |   \
- *                                                                        /    |    \ 
- *                                                                       /___|___\
- *                                                                 Order        Chaos                              
- *           
- *                      
- * Randomness is naturally the conjunction of Order and Chaos in Rule 30         
- *
- *
- * Syntropy - a Holistic Function for Universal Processing  
-                             
-
-
-
-
-                                  Pattern
-                                   SYNC
-                     +/- Biopsychic (Mind)
-Individual{Gravitational, Electromagnetic, Biopsychic}                            
-                              Conjunctive       
-                                 /           \ 
-                                /             \
-                               /               \           
-                              /                 \     
-                             /___________\
-                 Absolute                     Relative
-{Order, Chaos, Random}R30               Machine{Logic, Memory, Time} 
-            +/- R30                                 +/- Time 
-            CELEST                                    PSI
-            Image                                      Imitation
-
-
-
-
- 
- * A technik for generating Knightian randomness, in three parts:
- *
- * The cycle of creation moves in this order : PSI -> CELEST -> SYNC
- *    
- *    
- * Deterministic Randomess is chosen without conscious decision. R30 is deterministically random.
- * Syntropic Randomness is a co-creative act between Man, Machine, and Universe.
- * 
- * To request a co-deterministic value is to initiate Information Creation.
- *
- *  This process takes an image of the relative (PSI), then an image of the absolute (CELEST (PSI)),
- *   and finally fuses the two (SYNC) to produce the created information.
- *
- *   PSI is the time-dependent, weakly deterministic environmental state. In von Neumann architectures 
- *   an initial 64-bit PSI Seed is created by fusing external, passing time 
- *   with internal, cyclic time (Time Seed).
- *   
- *   This seed is then projected and magnified into a cryptographically unique image with SHA30, becoming PSI.
- *   This PSI value is structurally compatible with the upcoming CELEST which is simply SHA30 of PSI.
- *   
- *   Finally to create the new, co-deterministic value we fuse the two together with XOR
- *   in the SYNCHRONIC phase.
- *   
- *   In cybernetic notation, the complete transform is
- *
- *   PSI -> PSI XOR CELEST(PSI)
- *
- *   TERMS
- *
- *   Time Quantum - Smallest (atomic) time interval for the purposes of higher-level computations. 
- *                  It is the time required to load, evaluate, and store a 128x128 CA frame, which 
- *                  at the hardware level is approximately 130 clock cycles. During this time, the instructions
- *                  mi1_R30, mi1_PSI begin their incrementation process on shadow registers, and their results 
- *                  will be copied to R30 and PSI at the beginning of the following cycle.
- *                  mi0_incSDTIME is executed at the beginning of the cycle
- *
- *   Compute Cycle - The closed cycle of cybernetic transformation that includes load, evaluate, 3-step process, 
- *                   and store. It takes 3 Time Quanta end-to-end, however, parts of the computation may
- *                   be scheduled ahead of time and interleaved with other independent computations. And of course 
- *                   compute cycles can be chained for a single thread of computation.
- *                   The beginning of each compute cycle includes an incSDTIME as well as the results of 
- *                    incR30 and incPSI calculated during the previous cycle. Therefore all computational processes 
- *                    in the same quantum have access to the latest deterministic randomness through R30 and the latest
- *                    PSI fingerprint. These registers are synchronized for all cells (processes) in the same row (time quantum).
- *
- *   Machine instructions are named in the format miN_name where N is the number of time quanta they require
- *   with 0 meaning it is a digital operation that can be accomplished in between Compute Cycles (< 10 clock cycles)
- *   On its own hardware, a Compute Cycle is < 200 clock cycles. On von Neumann architectures it is at least millions.
- *
- *   As a concurrent process expressed on a serial architecture, this program is approximately 0% efficient. 
- *   Code optimizations at the expense of clarity will not be productive.
  */
 
 
@@ -341,15 +230,6 @@ cell rule_30(cell left, cell middle, cell right){
   return (cxor (left, cor (middle, right)));
 }
 
-rulefunc ruleFactory(rule_t r) {
-    rulefunc functionPtr;
-    if (r==30) {
-      functionPtr = &rule_30;
-    } else {
-      functionPtr = NULL;
-    }
-    return functionPtr;
-}
 
 /* Evaluate source vector with elemental rule, placing result in dest  */
 void eval_rule(rule_t r, vec128bec_t* source, vec128bec_t* dest){
@@ -361,7 +241,7 @@ void eval_rule(rule_t r, vec128bec_t* source, vec128bec_t* dest){
      right_cell  = (col == 1)   ? get_cell(source, 128)  : get_cell(source, col-1); 
      middle_cell = get_cell(source, col);
             
-     set_cell(dest, col, (*ruleFactory(r))(left_cell, middle_cell, right_cell) );   
+     set_cell(dest, col, rule_30(left_cell, middle_cell, right_cell) );   
   }  
 }
 
