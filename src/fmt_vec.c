@@ -209,7 +209,7 @@ char* fmt_vecbe(vec128bec_t* v, int fmt_type){
               break;
 
       case 7:   sprintf(r," ");
-                    break;
+                break;
 
       /* PSI Fingerprint 
          Technically this is a complete NDRAND, not just a fingerprint, but for 
@@ -219,13 +219,13 @@ char* fmt_vecbe(vec128bec_t* v, int fmt_type){
       case FMT_VEC_PSI :  
                  strcat(r,"[<:");
                  for (i=0; i<16; i++) {
-                   sprintf(&r[(i*2)+3],"%02X",(vecbe_get_byte(i+1,v)));
+                   sprintf(&r[(i*2)+3],"%02X",(vecbe_get_byte(16-i,v)));
                   }
                  strcat(r,":>]");
                  break;
 
       case 9:   sprintf(r," ");
-                    break;
+                break;
 
       /* Unsigned 32-bit */           
       case FMT_VEC_INT32 :  

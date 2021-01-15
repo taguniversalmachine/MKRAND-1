@@ -41,6 +41,9 @@
 #include "fmt_vec.h"
 #include "cell_logic.h"
 #include "machine_logic.h"
+// Check the nth bit from the right end
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
+// CHECK_BIT(temp, n - 1)
 
 /* Time Seed
  * A catalyst. 96 bits of environmental entropy in the form of
@@ -73,6 +76,55 @@ char* timeseed_tostr(TimeSeed* ts) {
    return (r);
 }
 
+/* 
+   Convert a string in PSI format [<:838087396B4405BCF017731EF1F99653:>] to vector
+*/
+int seed_str_to_vec(char* seed_str, vec128bec_t* out_vec) {
+  int r = 0;
+  char byte_string[3];
+ /* printf("SEED_STR_TO_VEC\n"); */
+  char* register_str;
+  register_str = fmt_vecbe(out_vec, FMT_VEC_PSI);
+ /* printf("%s\n", register_str); */
+  if (seed_str == NULL) {
+    vsetN(out_vec);
+    return(-1);
+  }
+
+  if ((strlen(seed_str) == 38) && (seed_str[0] == '[') && (seed_str[1] == '<')  && (seed_str[2] == ':') &&
+     (seed_str[35] == ':') && (seed_str[36] == '>')  && (seed_str[37] == ']'))
+  {
+    /* printf("SEED_STR_TO_VEC Looks Ok, converting bytes\n"); */
+    for (int byte_num=0; byte_num < 16; byte_num++) {
+      sprintf(byte_string, "%c%c",seed_str[(byte_num*2)+3], seed_str[((byte_num*2)+1)+3]);
+   /*   printf("Byte:(%d):%s\n", byte_num, byte_string);  */
+      int byte_int = (int)strtol(byte_string, NULL, 16);
+  /*   printf("Converted to %d\n", byte_int);  */
+      for (int bit=7; bit>=0; bit--){
+        cell cell_val = CELL_FALSE;
+        
+        int cell_val_int = 0;
+        if (CHECK_BIT(byte_int, bit)) {
+       /*   printf("CHECK_BIT %d,%d TRUE\n",byte_int, bit); */
+          cell_val = CELL_TRUE;
+        } else {
+       /*   printf("CHECK_BIT %d,%d FALSE\n",byte_int, bit); */
+          cell_val = CELL_FALSE;
+        }
+        int cell_num = 129 - ((byte_num * 8) + (7-bit) + 1);
+     /*   printf("Setting cell %d to %d\n", cell_num, cell_val);  */
+        set_cell(out_vec, cell_num, cell_val);
+      }
+    }
+    return(0);
+  } else {
+    printf("SEED_STR_TO_VEC FORMAT CHECK FAILED, seed length was %d\n", strlen(seed_str));
+    vsetN(out_vec);
+    return(-1);
+  }
+  return(r);
+}
+
 /* Compare TimeSeeds, return CELL_TRUE if equal, CELL_FALSE otherwise */
 int ts_cmpE(TimeSeed* s0,  TimeSeed* s1){
   return ((s0->long_count  == s1->long_count)  &&
@@ -99,6 +151,7 @@ void cp_halt(struct cell_proc_t *restrict cp, char* msg){
  */
 void cp_reset(struct cell_proc_t *restrict cp){
   cp->index = 0;
+  cp->counter_mode = 0;
   cp->NR = cp->B;
   cp->CR = cp->A;
 
@@ -131,7 +184,7 @@ uint16_t cp_init(struct cell_proc_t *restrict cp){
   cp->Stack  = frame_alloc();
   cp_setstate(cp, CP_NULL);
 
-  if (!((cp->A) && (cp->B) && (cp->C) && (cp->D) && (cp->X) && (cp->PSI) && (cp->R30) && (cp->R))) {
+  if (!((cp->A) && (cp->B) && (cp->C) && (cp->D) && (cp->X) && (cp->PSI) && (cp->R30) && (cp->R) )) {
      cp_halt(cp, "cp_init: Out of Memory");
   }
 
@@ -201,7 +254,9 @@ void mi0_xor  (cell_proc_t * restrict cp) {
 
   for (i = 1; i <= 128; i++) {
     set_cell(cp->D, i, cxor(get_cell(cp->A, i), get_cell(cp->B,i)));
-  } 
+  }
+
+  if (verbose_flag) { printf("mi0_xor end\n"); }
 }
 
 
@@ -298,7 +353,12 @@ void mi2_incPSI (cell_proc_t *restrict cp){
   }   
 
   vsetN(cp->PSI);
-  vcopy(cp->SDTIME, cp->A);
+  if (cp->counter_mode == 1) {
+     vcopy(cp->SDR30, cp->A);
+  } else {
+     vcopy(cp->SDTIME, cp->A);
+  }
+ 
   mi2_sha30(cp);
   vmov(cp->D, cp->PSI);
 }
@@ -310,13 +370,18 @@ void mi2_sha30 (cell_proc_t *restrict cp){
   if (verbose_flag) {  
     printf("MI2_SHA30\n");
   }   
-  pushSD(cp);
+ /* pushSD(cp); */
   vsetN(cp->D);
   vmov(cp->A, cp->SDR30);
   mi1_incR30(cp);
   mi1_incR30(cp);
-  vmov(cp->SDR30, cp->D);
-  popSD(cp);  // Restore Seeds
+  if (cp->counter_mode) {
+    vcopy(cp->SDR30, cp->D);
+  } else {
+    vmov(cp->SDR30, cp->D);
+  }
+  
+ /* popSD(cp);  // Restore Seeds */
 }
 
 /* Generate non-deterministic rand, PSI must already exist 
@@ -412,11 +477,24 @@ void mi5_time_quantum(cell_proc_t* restrict cp){
   if (verbose_flag) { printf ("Time Quantum\n");}
 
   if (!(cp_getstate(cp) == CP_IDLE)) { cp_halt(cp, "time_quantum : CellProc not Idle"); }
-
-  mi0_incSDTIME(cp);
-  mi1_incR30(cp);
-  mi2_incPSI(cp);
-  mi2_genR(cp);
+  /* Increment time seed if not in counter mode */
+  if (cp->counter_mode == 1) {
+    if (verbose_flag) { printf ("Time Quantum - counter mode");}
+  /* printf("mi5_time_quantum SDR30:\n");
+    print_vec(cp->SDR30); */
+  } else {
+    if (verbose_flag) { printf ("Time Quantum - incSDTIME\n");}
+    mi0_incSDTIME(cp);
+  }
+  
+  if (verbose_flag) { printf ("Time Quantum - incR30\n");}
+  mi1_incR30(cp);  /* SDR30 -> SDR30 */
+  vcopy(cp->SDR30, cp->R);
+  if (verbose_flag) { printf ("Time Quantum - incPSI\n");}
+  /* mi2_incPSI(cp); */
+  if (verbose_flag) { printf ("Time Quantum - genR\n");}
+ /* mi2_genR(cp); */
+  if (verbose_flag) { printf ("Time Quantum - end\n");}
 }
 
 /* Push Seed Registers onto stack */

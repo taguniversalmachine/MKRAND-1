@@ -135,9 +135,10 @@ cell get_cell(vec128bec_t* v, uint8_t index){
 
 uint8_t set_cell(vec128bec_t* v, uint8_t index, cell c){
   if ((index < 1) || (index > 128)) { halt ("set_cell : Bad Index"); } 
-
+  if (v == NULL) {
+    printf("Null Vector[%d]\n",index);
+  }
   v->c[129-index] = c;
-
   return(0);
 }
 
@@ -192,6 +193,25 @@ uint8_t vecbe_get_byte(uint8_t byte_num, vec128bec_t* v){
   uint8_t r = 0;
   uint8_t b = 0;
   uint8_t offset = ((byte_num-1) * 8) +1;
+  /*
+     byte_num  offset
+     1         ((1-1) * 8) +1 = 1
+     2         ((2-1) * 8) +1 = 9
+     3         ((3-1) * 8) +1 = 17
+     4         ((4-1) * 8) +1 = 25
+     5 
+     6
+     7
+     8
+     9
+     10
+     11
+     12
+     13
+     14
+     15
+     16
+  */
 
   if ((byte_num < 1) || (byte_num > 16)) { halt("get_byte: invalid index"); }
 
@@ -200,6 +220,23 @@ uint8_t vecbe_get_byte(uint8_t byte_num, vec128bec_t* v){
     r = r | (b << (i-offset));  
   }
   return(r);
+}
+
+/*  TODO change signature on this and vecbe_get_byte to vecotr, bytenum, val */
+uint8_t vecbe_set_byte(uint8_t byte_num, uint8_t byte_val, vec128bec_t* v) {
+  uint8_t i;
+  uint8_t r = 0;
+  uint8_t b = 0;
+  uint8_t offset = ((byte_num-1) * 8) +1;
+
+  if ((byte_num < 1) || (byte_num > 16)) { halt("set_byte: invalid index"); } 
+
+  for (i = offset; i<= (offset + 7); i++){
+    b = (get_cell(v,i) == CELL_TRUE) ? 1 : 0;
+    r = r | (b << (i-offset));  
+  }
+  return(r);
+
 }
 
 uint8_t vecbe_pack(uint8_t* bytes, vec128bec_t* v)

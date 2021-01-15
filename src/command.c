@@ -284,9 +284,9 @@ void usage(cell_proc_t* cp){
   if (msg == NULL) { halt("Out of Memory");}
   memset(msg, '\0', 10000);
   
-  strcat(msg, "MKRAND - A Digital Random Bit Generator\n");
+  strcat(msg, "MKRAND - A Digital Random Bit Generator (DEBUG)\n");
   strcat(msg, "Copyright (c) 2013 TAG Universal Machine.\n\n");
-  strcat(msg, "USAGE: mkrand [-f format] [-n blocks] [-o filename] [--profile] [--verbose]\n");
+  strcat(msg, "USAGE: mkrand [-s seed] [-f format] [-n blocks] [-o filename] [--profile] [--verbose]\n");
   strcat(msg, "Formats:\n");
 
   printf("%s",msg);
@@ -299,6 +299,12 @@ void usage(cell_proc_t* cp){
   free(msg);
 }
 
+int print_vec(vec128bec_t* vec) {
+  char* out_str = fmt_vecbe(vec, FMT_VEC_PSI);
+  printf("%s\n", out_str);
+  free(out_str);
+}
+
 
 int main(int argc, char *argv[]) 
 {
@@ -308,6 +314,7 @@ int main(int argc, char *argv[])
 
    int output_format = FMT_VEC_BINARY;
    int show_usage = 0;
+   int counter_mode = 0; /* Capture from command-line args, set later once cp_init is called */
 
    char* out_file_name = NULL;
 
@@ -315,6 +322,7 @@ int main(int argc, char *argv[])
    cell_proc_t* cp = &cpa;
 
    vec128bec_t* out_vecs;
+   vec128bec_t* seed_vec = vec_alloc();
 
    /* Set limits for number of blocks */
    size_t num_blocks = 1;
@@ -336,13 +344,14 @@ int main(int argc, char *argv[])
            {"blocks",  required_argument,       0, 'n'},  // Chain the production of n blocks
            {"output",  required_argument,       0, 'o'},  // Write to file         
            {"format",  required_argument,       0, 'f'},
+           {"seed",    required_argument,       0, 's'},
            {"help",    no_argument,             0, 'h'},  // Usage
            {0, 0, 0, 0}
          };
        /* getopt_long stores the option index here. */
        int option_index = 0;
  
-       c = getopt_long (argc, argv, "n:o:f:h?",
+       c = getopt_long (argc, argv, "n:o:f:s:h?",
                         long_options, &option_index);
  
        /* Detect the end of the options. */
@@ -374,6 +383,18 @@ int main(int argc, char *argv[])
            out_file_name = optarg;
            break;
 
+         case 's':
+           counter_mode = 1;
+        /*   printf("Counter mode: %d\n",  counter_mode);
+           print_vec(seed_vec); */
+           if (seed_str_to_vec(optarg, seed_vec) == 0) {
+           /*  printf("SEED OK\n");
+             print_vec(seed_vec); */
+           } else {
+             halt("Bad Seed\n");
+           }
+           break;
+
          case '?':
            /* getopt_long already printed an error message. */
            show_usage = 1;
@@ -386,11 +407,25 @@ int main(int argc, char *argv[])
          default:
            show_usage = 1;
          }
+         if (verbose_flag) { printf ("Processing command-line options\n");}
      }
 
+
+    if (verbose_flag) { printf ("Done processing command-line options\n");}
      check_clocks();
 
      cp_init(cp);
+
+     cp->counter_mode = counter_mode; /* From command-line args */
+     if (cp->counter_mode == 1) {
+    /*   printf("Moving seedvec to SDR30\n");
+       printf("SDR30 before\n");
+       print_vec(cp->SDR30); */
+       vmov(seed_vec, cp->SDR30);
+   /*    printf("SDR30 after\n");
+       print_vec(cp->SDR30); */
+     }
+     
 
      if (show_usage) {
        usage(cp);
@@ -411,6 +446,9 @@ int main(int argc, char *argv[])
     }
 
     if (num_blocks == 0) {
+      if (cp->counter_mode == 1) {
+        vcopy(seed_vec, cp->SDR30);
+      }
       out_vecs = malloc(sizeof(vec128bec_t));              /* Streaming, one vector at a time */
       memset(out_vecs, '\0', (sizeof(vec128bec_t)));
       while (1) {
@@ -426,14 +464,15 @@ int main(int argc, char *argv[])
     if (out_vecs == NULL) { halt ("Command - Out of Memory"); }
 
     for (i = 0; i < num_blocks; i++) {
+       if (verbose_flag) { printf("Generating block %d\n", i); }
        mi5_time_quantum(cp);
        vcopy(cp->R, &out_vecs[i]);
+       if (verbose_flag) { printf("Generated block %d\n", i); }
     }
 
     to_stream(out_stream, num_blocks, output_format, out_vecs);
 
     fclose(out_stream);
-
     cp_free(cp);
 
     return (EXIT_SUCCESS);

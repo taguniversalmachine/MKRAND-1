@@ -19,6 +19,7 @@ typedef enum {CP_NIL, CP_NULL, CP_IDLE, CP_RUN, CP_HALT} cp_state_t;
 
 typedef struct cell_proc_t {
   frame_t* Stack;
+  int counter_mode;   // With external seed
   cp_state_t s;       // private state - make 64
   size_t  index;      // cell row index
   vec128bec_t* A;      // GP Input 1
@@ -83,5 +84,5 @@ void popGP(cell_proc_t* cp);
    I/O output transfers occur
  */
 void mi5_time_quantum(cell_proc_t* cp);
-
+int seed_str_to_vec(char* seed_str, vec128bec_t* out_vec);
 #endif
