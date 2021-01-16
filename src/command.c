@@ -446,9 +446,6 @@ int main(int argc, char *argv[])
     }
 
     if (num_blocks == 0) {
-      if (cp->counter_mode == 1) {
-        vcopy(seed_vec, cp->SDR30);
-      }
       out_vecs = malloc(sizeof(vec128bec_t));              /* Streaming, one vector at a time */
       memset(out_vecs, '\0', (sizeof(vec128bec_t)));
       while (1) {
