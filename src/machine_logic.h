@@ -41,6 +41,7 @@ typedef struct TimeSeed {
 
 TimeSeed time_seed();
 char* timeseed_tostr(TimeSeed* ts);
+vec128bec_t* time_seed_to_vec(TimeSeed seed);
 int check_clocks();
 
 uint16_t cp_init(struct cell_proc_t* cp);

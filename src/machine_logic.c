@@ -76,6 +76,41 @@ char* timeseed_tostr(TimeSeed* ts) {
    return (r);
 }
 
+vec128bec_t* time_seed_to_vec(TimeSeed seed) {
+   vec128bec_t* ts = vec_alloc();
+   /* Convert 
+      long count : long int (32 bits)
+      short count: long int (32 bits)
+      cyclic : long int     (32 bits)
+      96 bits on the vector
+   */
+
+   int index = 1;
+   // Long count
+   for(int i=0; i<32; i++) {
+     set_cell(ts, index + i, ((seed.long_count >> i) & 0x01) ? CELL_TRUE : CELL_FALSE);
+   }
+
+   // short count
+   for(int i=0; i<32; i++){
+    set_cell(ts, index + i + 32, ((seed.short_count >>i) & 0x01) ? CELL_TRUE : CELL_FALSE);
+   }
+
+   // cyclic
+   for(int i=0; i<32; i++){
+    set_cell(ts, index + i + 64, ((seed.cyclic >> 1) & 0x01) ? CELL_TRUE : CELL_FALSE);
+   }
+
+   // set remaining bits to CELL_FALSE
+   for(int rest=96; rest<=128; rest++){
+    set_cell(ts, rest, CELL_FALSE);
+   }
+
+   // every bit should be either CELL_TRUE or CELL_FALSE
+
+   return (ts);
+}
+
 /* 
    Convert a string in PSI format [<:838087396B4405BCF017731EF1F99653:>] to vector
 */
@@ -103,7 +138,6 @@ int seed_str_to_vec(char* seed_str, vec128bec_t* out_vec) {
       for (int bit=7; bit>=0; bit--){
         cell cell_val = CELL_FALSE;
         
-        int cell_val_int = 0;
         if (CHECK_BIT(byte_int, bit)) {
        /*   printf("CHECK_BIT %d,%d TRUE\n",byte_int, bit); */
           cell_val = CELL_TRUE;
@@ -118,7 +152,7 @@ int seed_str_to_vec(char* seed_str, vec128bec_t* out_vec) {
     }
     return(0);
   } else {
-    printf("SEED_STR_TO_VEC FORMAT CHECK FAILED, seed length was %d\n", strlen(seed_str));
+    printf("SEED_STR_TO_VEC FORMAT CHECK FAILED, seed length was %ld\n", strlen(seed_str));
     vsetN(out_vec);
     return(-1);
   }
@@ -160,8 +194,7 @@ void cp_reset(struct cell_proc_t *restrict cp){
   vsetN(cp->A);
   vsetN(cp->B);
   vsetN(cp->C);
- // vsetN(cp->D);
- // vsetN(cp->X);
+  vsetN(cp->D);
   vsetN(cp->PSI);
   vsetN(cp->R30);
   vsetN(cp->R);

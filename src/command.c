@@ -425,6 +425,12 @@ int main(int argc, char *argv[])
        vmov(seed_vec, cp->SDR30);
    /*    printf("SDR30 after\n");
        print_vec(cp->SDR30); */
+     } else {
+        /*  Generate seed from current time
+        */
+        seed_vec = time_seed_to_vec(time_seed());
+        vmov(seed_vec, cp->SDR30);
+       // free(seed_vec);
      }
      
 
