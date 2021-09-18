@@ -303,6 +303,7 @@ int print_vec(vec128bec_t* vec) {
   char* out_str = fmt_vecbe(vec, FMT_VEC_PSI);
   printf("%s\n", out_str);
   free(out_str);
+  return(0);
 }
 
 
@@ -461,10 +462,10 @@ int main(int argc, char *argv[])
     if (out_vecs == NULL) { halt ("Command - Out of Memory"); }
 
     for (i = 0; i < num_blocks; i++) {
-       if (verbose_flag) { printf("Generating block %d\n", i); }
+       if (verbose_flag) { printf("Generating block %ld\n", i); }
        mi5_time_quantum(cp);
        vcopy(cp->R, &out_vecs[i]);
-       if (verbose_flag) { printf("Generated block %d\n", i); }
+       if (verbose_flag) { printf("Generated block %ld\n", i); }
     }
 
     to_stream(out_stream, num_blocks, output_format, out_vecs);

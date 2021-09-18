@@ -160,8 +160,8 @@ void cp_reset(struct cell_proc_t *restrict cp){
   vsetN(cp->A);
   vsetN(cp->B);
   vsetN(cp->C);
-  vsetN(cp->D);
-  vsetN(cp->X);
+ // vsetN(cp->D);
+ // vsetN(cp->X);
   vsetN(cp->PSI);
   vsetN(cp->R30);
   vsetN(cp->R);
@@ -175,7 +175,6 @@ uint16_t cp_init(struct cell_proc_t *restrict cp){
   cp->B      = vec_alloc();
   cp->C      = vec_alloc();
   cp->D      = vec_alloc();
-  cp->X      = vec_alloc();
   cp->PSI    = vec_alloc();
   cp->R30    = vec_alloc();
   cp->SDR30  = vec_alloc();
@@ -184,7 +183,7 @@ uint16_t cp_init(struct cell_proc_t *restrict cp){
   cp->Stack  = frame_alloc();
   cp_setstate(cp, CP_NULL);
 
-  if (!((cp->A) && (cp->B) && (cp->C) && (cp->D) && (cp->X) && (cp->PSI) && (cp->R30) && (cp->R) )) {
+  if (!((cp->A) && (cp->B) && (cp->C) && (cp->PSI) && (cp->R30) && (cp->R) )) {
      cp_halt(cp, "cp_init: Out of Memory");
   }
 
@@ -200,7 +199,7 @@ void cp_free(struct cell_proc_t *restrict cp){
   free(cp->B);  
   free(cp->C);   
   free(cp->D);  
-  free(cp->X);
+//  free(cp->X);
   free(cp->PSI); 
   free(cp->R30); 
   free(cp->SDR30); 

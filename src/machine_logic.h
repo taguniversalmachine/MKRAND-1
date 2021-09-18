@@ -5,16 +5,6 @@
 #include <time.h>
 #include "cell_logic.h"
 
-typedef struct machine_instruction_t {
-    size_t   clock_cycles;
-    uint64_t instruction;
-} machine_instruction_t;
-
-typedef struct program_t {
-  machine_instruction_t* instructions;
-  size_t CP;
-} program_t;
-
 typedef enum {CP_NIL, CP_NULL, CP_IDLE, CP_RUN, CP_HALT} cp_state_t;
 
 typedef struct cell_proc_t {
@@ -26,7 +16,6 @@ typedef struct cell_proc_t {
   vec128bec_t* B;      // GP Input 2
   vec128bec_t* C;      // GP Buffer - will automatically be updated with D in next cycle
   vec128bec_t* D;      // GP Output (Next State)
-  vec128bec_t* X;      // GP Transfer
   vec128bec_t* PSI;    // Timestamp                                     Synchronized with other cells on row
   vec128bec_t* R30;    // Deterministic randomness                      Synchronized with other cells on row
   vec128bec_t* SDR30;  // Seed for R30INC
@@ -34,7 +23,6 @@ typedef struct cell_proc_t {
   vec128bec_t* R;      // Free variable (non-deterministic randomness)  Synchronized with other cells on row ?
   vec128bec_t* NR;     // Next Row pointer
   vec128bec_t* CR;     // Current Row pointer
-  program_t program;
 } cell_proc_t;
 
 typedef struct machine_t {
